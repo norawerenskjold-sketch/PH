@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protocol 9: Neon Shadows</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg: #050507;
+            --surface: #0f0f13;
+            --primary: #00f2ff;
+            --secondary: #7000ff;
+            --accent: #9ece6a;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --danger: #ff0055;
+            --header-font: 'Poppins', sans-serif;
+            --body-font: 'Lato', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--body-font);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        #terminal {
+            width: 95vw;
+            max-width: 1200px;
+            height: 90vh;
+            background: var(--surface);
+            border: 1px solid #1e293b;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            grid-template-rows: auto 1fr auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            border-radius: 4px;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            padding: 18px 25px;
+            background: #09090c;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--header-font);
+            letter-spacing: 3px;
+            color: var(--primary);
+            text-transform: uppercase;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        aside {
+            background: #08080a;
+            padding: 25px;
+            border-right: 1px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            overflow-y: auto;
+        }
+
+        .stat-label { 
+            font-size: 11px; 
+            color: var(--muted); 
+            text-transform: uppercase; 
+            margin-bottom: 12px; 
+            border-bottom: 1px solid #1e293b; 
+            padding-bottom: 6px;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+        .sidebar-list {
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-item { 
+            color: #94a3b8; 
+            border-left: 2px solid #334155; 
+            padding-left: 12px; 
+            font-family: 'Courier New', monospace;
+            line-height: 1.4;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .status-pill {
+            background: rgba(0, 242, 255, 0.1);
+            color: var(--primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            text-transform: uppercase;
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .ending-unlocked { 
+            color: var(--accent); 
+            font-weight: bold; 
+            border-left: 2px solid var(--accent); 
+            padding-left: 12px; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(158, 206, 106, 0.1);
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+
+        .ending-locked {
+            color: #334155;
+            border-left: 2px solid #1e293b;
+            padding-left: 12px;
+            font-style: italic;
+        }
+
+        main {
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            background: #0d0d12;
+        }
+
+        .image-container {
+            width: 100%;
+            height: 320px;
+            position: relative;
+            overflow: hidden;
+            background: #000;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .scene-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        .img-back { z-index: 1; opacity: 1; }
+        .img-front { z-index: 2; opacity: 0; }
+        .img-front.active { opacity: 1; }
+
+        .content-padding {
+            padding: 40px 50px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        #scene-desc {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 40px;
+            white-space: pre-wrap;
+            color: #cbd5e1;
+        }
+
+        #choices {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: auto;
+            padding-bottom: 20px;
+        }
+
+        .choice-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid #334155;
+            color: var(--text);
+            padding: 14px 24px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease-out;
+            position: relative;
+            font-size: 0.95rem;
+            border-radius: 2px;
+        }
+
+        .choice-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            border-style: dashed;
+        }
+
+        .choice-btn:not(:disabled):hover {
+            border-color: var(--primary);
+            background: rgba(0, 242, 255, 0.1);
+            color: #fff;
+            transform: translateX(5px);
+        }
+
+        footer {
+            grid-column: 1 / -1;
+            padding: 12px 25px;
+            background: #09090c;
+            font-size: 11px;
+            color: #334155;
+            border-top: 1px solid #1e293b;
+            display: flex;
+            justify-content: space-between;
+            font-family: monospace;
+            z-index: 10;
+        }
+
+        .ending-card {
+            border: 1px solid var(--accent);
+            padding: 25px;
+            background: rgba(158, 206, 106, 0.05);
+            margin-top: 10px;
+            border-radius: 4px;
+            border-left-width: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="terminal">
+    <header>
+        <div><i class="fas fa-microchip"></i> NEURAL_SCRAPPER_OS v9.6</div>
+        <div id="location-display">INIT_SEQUENCE</div>
+    </header>
+
+    <aside>
+        <div>
+            <div class="stat-label">Neural History</div>
+            <div id="history-log" class="sidebar-list"></div>
+        </div>
+
+        <div>
+            <div class="stat-label">Hardware Status</div>
+            <div id="hardware-status" class="sidebar-list">
+                <div class="status-pill">CORE: ATTACHED</div>
+                <div id="serial-status" class="status-pill" style="color: var(--danger)">SERIAL: ACTIVE</div>
+            </div>
+        </div>
+
+        <div>
+            <div class="stat-label">Memory Bank</div>
+            <div id="endings-log" class="sidebar-list"></div>
+        </div>
+    </aside>
+
+    <main>
+        <div class="image-container">
+            <img id="img-back" class="scene-img img-back" src="" alt="">
+            <img id="img-front" class="scene-img img-front" src="" alt="">
+        </div>
+        <div class="content-padding">
+            <div id="scene-desc">Initializing Neural Feed...</div>
+            <div id="choices"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div>LOG_SESSION: 2049.03.11</div>
+        <div>STATUS: <span style="color:var(--accent)">ONLINE</span></div>
+    </footer>
+</div>
+
+<script>
+    const ASSETS = {
+        street: 'https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?auto=format&fit=crop&w=1200&q=60',
+        alley: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=60',
+        bar: 'https://images.unsplash.com/photo-1514525253344-a812da999d6c?auto=format&fit=crop&w=1200&q=60',
+        terminal: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=60',
+        office: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=60',
+        nebula: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1200&q=60',
+        drone: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=1200&q=60',
+        hacker: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=60',
+        chase: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=1200&q=60',
+        sewer: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=60',
+        money: 'https://images.unsplash.com/photo-1518458028785-8fbcd101ebb9?auto=format&fit=crop&w=1200&q=60',
+        uprising: 'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&w=1200&q=60'
+    };
+
+    const initialState = {
+        history: [],
+        currentScene: 'start',
+        serialWiped: false,
+        sawSerial: false
+    };
+
+    let state = JSON.parse(JSON.stringify(initialState));
+
+    const scenes = {
+        start: {
+            loc: "Sector 7: Alleyway",
+            img: ASSETS.alley,
+            text: "The acid rain sizzles against your synthetic leather jacket. You're standing over a discarded 'Persona-Core' — illegal memory hardware.\n\nA police drone sweeps its searchlight nearby.",
+            choices: [
+                { text: "Quickly pocket the Core and hide.", img: ASSETS.alley, nextScene: "hide_drone" },
+                { text: "Interface with the Core immediately.", img: ASSETS.terminal, nextScene: "interface_start" },
+                { text: "Leave it. It smells like a trap.", img: ASSETS.street, nextScene: "ending_bystander" }
+            ]
+        },
+        hide_drone: {
+            loc: "Sector 7: Shadows",
+            img: ASSETS.alley,
+            text: "The drone hums past. You're safe. The Core is vibrating in your pocket—a sign of high-tier consciousness backup.",
+            choices: [
+                { text: "Head to 'The Glitch' bar to sell it.", img: ASSETS.bar, nextScene: "the_glitch" },
+                { text: "Examine the hardware details.", img: ASSETS.terminal, nextScene: "check_sn" }
+            ]
+        },
+        check_sn: {
+            loc: "Sector 7: Terminal",
+            img: ASSETS.terminal,
+            text: "The serial number starts with 'EXO-01'. This belongs to a High-Council Executor. You aren't just a scrapper anymore; you're a high-value target.\n\nThere's a public data-bin nearby. You might be able to scramble the tracking signal here.",
+            onLoad: () => { state.sawSerial = true; updateHardwareUI(); },
+            choices: [
+                { text: "Wipe the Serial ID (Requires Risk).", img: ASSETS.terminal, nextScene: "wipe_success" },
+                { text: "Too dangerous. Get to 'The Glitch' now.", img: ASSETS.bar, nextScene: "the_glitch" }
+            ]
+        },
+        wipe_success: {
+            loc: "Sector 7: Terminal",
+            img: ASSETS.terminal,
+            text: "Data-ghosting complete. The 'EXO-01' signature is replaced with junk code. The Council can no longer track the hardware directly.",
+            onLoad: () => { state.serialWiped = true; updateHardwareUI(); },
+            choices: [
+                { text: "Head to The Glitch bar.", img: ASSETS.bar, nextScene: "the_glitch" }
+            ]
+        },
+        interface_start: {
+            loc: "Sector 7: Hotlink",
+            img: ASSETS.terminal,
+            text: "A scream echoes into your neural link. 'HELP ME,' a voice flashes. 'THEY ARE PURGING THE ARCHIVE.'\n\nThe drone detects the surge and turns back.",
+            choices: [
+                { text: "RUN! Sprint into the drainage tunnels.", img: ASSETS.chase, nextScene: "chase_sequence" },
+                { text: "Try to hack the drone's optics.", img: ASSETS.drone, nextScene: "the_glitch" }
+            ]
+        },
+        chase_sequence: {
+            loc: "The Slums: Underpass",
+            img: ASSETS.chase,
+            text: "Sirens wail. You reach a fork in the tunnel.",
+            choices: [
+                { text: "Drop into the toxic runoff canal.", img: ASSETS.sewer, nextScene: "the_glitch" },
+                { text: "Climb to the rooftops.", img: ASSETS.street, nextScene: "the_glitch" }
+            ]
+        },
+        the_glitch: {
+            loc: "The Glitch Bar",
+            img: ASSETS.bar,
+            text: "Jax is in his usual booth. 'Kaelen,' he says. 'You smell like a high-priority warrant. What did you find?'",
+            choices: [
+                { text: "Show him the Core. (Trust Jax)", img: ASSETS.hacker, nextScene: "jax_truth" },
+                { text: "Escape alone.", img: ASSETS.street, nextScene: "ending_greed" }
+            ]
+        },
+        jax_truth: {
+            loc: "The Glitch: Backroom",
+            img: ASSETS.hacker,
+            text: "Jax's eyes widen. 'This is the key to stopping the whole machine. What's the play?'",
+            choices: [
+                { text: "Upload to Public Mesh.", img: ASSETS.uprising, nextScene: "ending_resistance" },
+                { text: "Sell to the Syndicate.", img: ASSETS.money, nextScene: "ending_syndicate" },
+                { 
+                    text: "Neural Merge (Protocol 9).", 
+                    img: ASSETS.nebula, 
+                    nextScene: "ending_ghost",
+                    condition: () => state.serialWiped,
+                    lockedText: "Neural Merge (LOCKED: Serial Active)"
+                }
+            ]
+        },
+        ending_bystander: {
+            img: ASSETS.street,
+            text: "<div class='ending-card'><strong>EPILOGUE: THE BYSTANDER</strong><br>You walk away. Today isn't worth dying for. You survive, but the world remains unchanged.</div>",
+            onLoad: () => recordEnding("THE BYSTANDER"),
+            choices: [{ text: "REBOOT SYSTEM", action: () => resetGame() }]
+        },
+        ending_resistance: {
+            img: ASSETS.uprising,
+            text: "<div class='ending-card'><strong>EPILOGUE: THE SPARK</strong><br>The truth sparked a revolution. The Council fell, and the city breathed for the first time in decades.</div>",
+            onLoad: () => recordEnding("THE SPARK"),
+            choices: [{ text: "REBOOT SYSTEM", action: () => resetGame() }]
+        },
+        ending_syndicate: {
+            img: ASSETS.money,
+            text: "<div class='ending-card'><strong>EPILOGUE: THE PROFITEER</strong><br>You sold the data. You're rich, safe, and entirely alone in your orbital suite.</div>",
+            onLoad: () => recordEnding("THE PROFITEER"),
+            choices: [{ text: "REBOOT SYSTEM", action: () => resetGame() }]
+        },
+        ending_greed: {
+            img: ASSETS.office,
+            text: "<div class='ending-card'><strong>EPILOGUE: DATA EXPUNGED</strong><br>The Council caught you. Without decryption, the core was useless. They wiped your mind.</div>",
+            onLoad: () => recordEnding("DATA EXPUNGED"),
+            choices: [{ text: "REBOOT SYSTEM", action: () => resetGame() }]
+        },
+        ending_ghost: {
+            img: ASSETS.nebula,
+            text: "<div class='ending-card'><strong>EPILOGUE: GHOST IN THE MACHINE</strong><br>You merged with the ghost-cleansed data. You are no longer human; you are the city's new silent guardian.</div>",
+            onLoad: () => recordEnding("THE GHOST IN THE MACHINE"),
+            choices: [{ text: "REBOOT SYSTEM", action: () => resetGame() }]
+        }
+    };
+
+    function updateHardwareUI() {
+        const serial = document.getElementById('serial-status');
+        if (state.serialWiped) {
+            serial.innerText = "SERIAL: GHOSTED";
+            serial.style.color = "var(--accent)";
+            serial.style.borderColor = "var(--accent)";
+        } else if (state.sawSerial) {
+            serial.innerText = "SERIAL: TRACKED";
+            serial.style.color = "var(--danger)";
+        } else {
+            serial.innerText = "SERIAL: UNKNOWN";
+            serial.style.color = "var(--muted)";
+        }
+    }
+
+    function setSceneImage(url) {
+        const front = document.getElementById('img-front');
+        const back = document.getElementById('img-back');
+        if (front.src === url && front.classList.contains('active')) return;
+
+        back.src = front.src || url;
+        front.classList.remove('active');
+        front.src = url;
+        
+        setTimeout(() => {
+            front.classList.add('active');
+        }, 50);
+    }
+
+    function recordEnding(name) {
+        let saved = JSON.parse(localStorage.getItem('protocol9_endings') || "[]");
+        if (!saved.includes(name)) {
+            saved.push(name);
+            localStorage.setItem('protocol9_endings', JSON.stringify(saved));
+        }
+        updateEndingsUI();
+    }
+
+    function updateEndingsUI() {
+        const saved = JSON.parse(localStorage.getItem('protocol9_endings') || "[]");
+        const endLog = document.getElementById('endings-log');
+        endLog.innerHTML = "";
+        
+        const possibleEndings = ["THE BYSTANDER", "THE SPARK", "THE PROFITEER", "DATA EXPUNGED", "THE GHOST IN THE MACHINE"];
+        possibleEndings.forEach(e => {
+            const unlocked = saved.includes(e);
+            const div = document.createElement('div');
+            div.className = unlocked ? "ending-unlocked" : "ending-locked";
+            div.innerText = unlocked ? e : "Locked Memory Block";
+            endLog.appendChild(div);
+        });
+    }
+
+    function updateHistoryUI() {
+        const historyLog = document.getElementById('history-log');
+        historyLog.innerHTML = state.history.length === 0 ? `<div class="history-item">System idle...</div>` : "";
+        state.history.forEach(entry => {
+            const div = document.createElement('div');
+            div.className = "history-item";
+            div.innerText = `> ${entry}`;
+            historyLog.appendChild(div);
+        });
+        historyLog.scrollTop = historyLog.scrollHeight;
+    }
+
+    function resetGame() {
+        state = JSON.parse(JSON.stringify(initialState));
+        updateHardwareUI();
+        loadScene('start');
+    }
+
+    function loadScene(sceneKey) {
+        const scene = scenes[sceneKey];
+        if (!scene) return;
+        state.currentScene = sceneKey;
+
+        setSceneImage(scene.img);
+        if (scene.loc) document.getElementById('location-display').innerText = scene.loc;
+        
+        const descEl = document.getElementById('scene-desc');
+        descEl.innerHTML = scene.text;
+
+        if (scene.onLoad) scene.onLoad();
+
+        const choicesEl = document.getElementById('choices');
+        choicesEl.innerHTML = "";
+        scene.choices.forEach(choice => {
+            const btn = document.createElement('button');
+            btn.className = "choice-btn";
+            
+            const isLocked = choice.condition && !choice.condition();
+            btn.innerText = isLocked ? choice.lockedText : choice.text;
+            btn.disabled = isLocked;
+            
+            // Image preview on hover
+            btn.onmouseenter = () => { if(choice.img && !isLocked) setSceneImage(choice.img); };
+            btn.onmouseleave = () => { setSceneImage(scene.img); };
+            
+            btn.onclick = () => {
+                state.history.push(choice.text);
+                updateHistoryUI();
+                
+                if (choice.action) {
+                    choice.action();
+                } else {
+                    loadScene(choice.nextScene);
+                }
+            };
+            choicesEl.appendChild(btn);
+        });
+    }
+
+    window.onload = () => {
+        // Preload
+        Object.values(ASSETS).forEach(url => {
+            const img = new Image();
+            img.src = url;
+        });
+        
+        updateEndingsUI();
+        loadScene('start');
+    };
+</script>
+</body>
+</html>
